@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IE/Edge WebGL Point Size Bug</title>
+    <style>
+        canvas {
+            background-color: black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas1"></canvas>
+    <canvas id="canvas2"></canvas>
+    <script id="vs" type="x-shader/vertex">
+        attribute vec4 aPosition;
+
+        void main() {
+            gl_Position = aPosition;
+            gl_PointSize = 10.0;
+        }
+    </script>
+    <script id="fs" type="x-shader/fragment">
+        void main() {
+            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        }
+    </script>      
+    <script>
+    window.onload = function() {
+        "use strict";
+
+        var numPoints = 100;
+        var positions = getPositions(numPoints);
+        var indices = getIndices(numPoints);
+
+        var gl1 = getGL("canvas1");
+        var program1 = getProgram(gl1);
+
+        var aPosition1 = gl1.getAttribLocation(program1, "aPosition")
+
+        bindPositions(gl1, aPosition1);
+
+        gl1.drawArrays(gl1.POINTS, 0, numPoints);
+
+
+        var gl2 = getGL("canvas2");
+        var program2 = getProgram(gl2);
+
+        var aPosition2 = gl2.getAttribLocation(program2, "aPosition")
+
+        bindPositions(gl2, aPosition2);
+
+        var buffer = gl2.createBuffer();
+
+        gl2.bindBuffer(gl2.ELEMENT_ARRAY_BUFFER, buffer);
+        gl2.bufferData(gl2.ELEMENT_ARRAY_BUFFER, indices, gl2.STATIC_DRAW);
+
+        gl2.drawElements(gl2.POINTS, numPoints, gl2.UNSIGNED_BYTE, 0);
+
+
+
+        function getGL(canvasId) {
+            var canvas = document.getElementById(canvasId);
+            var gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+            canvas.width = 400;
+            canvas.height = 400;
+            gl.viewport(0, 0, canvas.width, canvas.height);
+
+            return gl;
+        }
+
+        function getProgram(gl) {
+            var vshader = gl.createShader(gl.VERTEX_SHADER);
+            gl.shaderSource(vshader, document.getElementById("vs").text);
+            gl.compileShader(vshader);
+            if (!gl.getShaderParameter(vshader, gl.COMPILE_STATUS)) {
+                console.error(gl.getShaderInfoLog(vshader));
+            }
+
+            var fshader = gl.createShader(gl.FRAGMENT_SHADER);
+            gl.shaderSource(fshader, document.getElementById("fs").text);
+            gl.compileShader(fshader);
+            if (!gl.getShaderParameter(fshader, gl.COMPILE_STATUS)) {
+                console.error(gl.getShaderInfoLog(fshader));
+            }
+
+            var program = gl.createProgram();
+            gl.attachShader(program, vshader);
+            gl.attachShader(program, fshader);
+            gl.linkProgram(program);
+
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                console.error(gl.getProgramInfoLog(program));
+            }
+
+            gl.useProgram(program);
+
+            return program;
+        }
+
+        function getPositions(n) {
+            n *= 3;
+
+            var positions = new Float32Array(n);
+
+            for (var i = 0; i < n; i++) {
+                positions[i] = Math.random() * 2 - 1;
+            }
+
+            return positions;
+        }
+
+        function getIndices(n) {
+            var indices = new Uint16Array(n);
+
+            for (var i = 0; i < n; i++) {
+                indices[i] = i;
+            }
+        
+            return indices;
+        }
+
+        function bindPositions(gl, location) {
+            var buffer = gl.createBuffer();
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+            gl.vertexAttribPointer(location, 3, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(location);
+        }
+    };
+    </script>
+</body>
+</html>
