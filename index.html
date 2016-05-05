@@ -1,4 +1,12 @@
 <!DOCTYPE html>
+<!-- 
+    This pages renders two identical point clouds
+    on two separate canvases. The only difference is
+    that gl.drawArrays is used for the first and
+    gl.drawElements is used for the second.
+
+    They should render identically.
+ -->
 <html>
 <head>
     <title>IE/Edge WebGL Point Size Bug</title>
@@ -31,7 +39,12 @@
         var numPoints = 100;
         var positions = getPositions(numPoints);
         var indices = getIndices(numPoints);
-
+        
+        ///////////////////////////////
+        // Canvas 1 
+        // Draw using gl.drawArrays
+        ///////////////////////////////
+        
         var gl1 = getGL("canvas1");
         var program1 = getProgram(gl1);
 
@@ -41,6 +54,14 @@
 
         gl1.drawArrays(gl1.POINTS, 0, numPoints);
 
+        ///////////////////////////////
+        // End Canvas 1 
+        ///////////////////////////////
+
+        ///////////////////////////////
+        // Canvas 2 
+        // Draw using gl.drawElements
+        ///////////////////////////////
 
         var gl2 = getGL("canvas2");
         var program2 = getProgram(gl2);
@@ -56,7 +77,13 @@
 
         gl2.drawElements(gl2.POINTS, numPoints, gl2.UNSIGNED_BYTE, 0);
 
+        ///////////////////////////////
+        // End Canvas 2 
+        ///////////////////////////////
 
+        ///////////////////////////////
+        // Helper functions
+        ///////////////////////////////
 
         function getGL(canvasId) {
             var canvas = document.getElementById(canvasId);
